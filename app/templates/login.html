@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Вход{% endblock %}
+{% block content %}
+    <form method="POST" enctype="multipart/form-data" class="form-control d-flex flex-column gap-3">
+        {{ form.hidden_tag() }} 
+        {{ form.email(class="form-control", placeholder="Email") }}
+        {% if form.email.errors %}
+            <div class="invalid-feedback" style="display: block!important;">
+                {% for error in form.username.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>    
+        {% endif %}
+
+        {{ form.password(class="form-control", placeholder="Password") }}
+        {% if form.password.errors %}
+            <div class="invalid-feedback" style="display: block!important;">
+                {% for error in form.password.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>    
+        {% endif %}        
+        {{ form.remember() }} Remember Me
+         <a href="{{ url_for('login.forgot_password') }}">Забыли пароль?</a>
+         <a href="{{ url_for('reg.register') }}">Регистрация</a>
+        {{ form.submit(class="btn btn-success") }}
+    </form>
+{% endblock %}
