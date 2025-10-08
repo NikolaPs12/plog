@@ -1,3 +1,4 @@
+__version__ = "1.0.0"
 import os
 from flask import Flask
 from .routes.main import main
