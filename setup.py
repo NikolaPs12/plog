@@ -1,17 +1,9 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
-    name="your-flask-app",
-    version="1.0.0",  # явно указанная версия
-    packages=find_packages(),
-    include_package_data=True,
-    install_requires=[
-        "flask",
-        "flask-sqlalchemy",
-        "flask-login", 
-        "flask-mail",
-        "flask-wtf",
-        "pillow",
-        "wtforms"
-    ],
+    name="flask-app",
+    version="1.0.0",
+    packages=[],  # Пустой список пакетов
+    py_modules=[],  # Пустой список модулей
+    install_requires=[],  # Зависимости уже в requirements.txt
 )
