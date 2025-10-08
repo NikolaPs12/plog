@@ -1,0 +1,214 @@
+{% extends "base/base.html" %}
+
+{% block title %}Главная страница{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Section with modern styling -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="welcome-section text-center py-5">
+                <h1 class="display-3 fw-bold mb-4">Добро пожаловать!</h1>
+                <p class="lead mb-4 text-muted">Это главная страница нашего сайта.</p>
+                <div class="welcome-decoration"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Section with better styling -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <form method="GET" action="{{ url_for('main.index') }}" class="d-flex shadow-sm">
+                <input type="text" name="q" class="form-control form-control-lg me-2" 
+                    placeholder="Поиск постов..." value="{{ search_query }}">
+                <button type="submit" class="btn btn-primary px-4">Найти</button>
+                {% if search_query %}
+                    <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary ms-2">Сбросить</a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+
+    <!-- 🔹 ФИЛЬТРЫ -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('main.index') }}">
+                        <!-- Сохраняем поиск если он был -->
+                        {% if search_query %}
+                            <input type="hidden" name="q" value="{{ search_query }}">
+                        {% endif %}
+                        
+                        <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">👤 Автор:</label>
+                            <select name="author" class="form-select">
+                                {% for author_id, username in filter_form.author.choices %}
+                                    <option value="{{ author_id }}" 
+                                            {% if author_id == current_author %}selected{% endif %}>  <!-- ⬅️ ИСПРАВЛЕНО: было current_autor -->
+                                        {{ username }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                            
+                            <!-- СОРТИРОВКА -->
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">🔀 Сортировка:</label>
+                                <select name="sort_by" class="form-select">
+                                    <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>
+                                        🆕 Сначала новые
+                                    </option>
+                                    <option value="oldest" {% if current_sort == 'oldest' %}selected{% endif %}>
+                                        📅 Сначала старые
+                                    </option>
+                                    <option value="popular" {% if current_sort == 'popular' %}selected{% endif %}>
+                                        🔥 Самые популярные
+                                    </option>
+                                </select>
+                            </div>
+                            
+                            <!-- КНОПКА -->
+                            <div class="col-md-4 mb-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    ✅ Применить фильтры
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Section with enhanced cards -->
+    <div class="row">
+        {% for item in posts_with_comments %}
+            {% set post = item.post %}
+            {% set pagination = item.comments_pagination %}
+            
+            <div class="col-md-8 mb-4">
+                <article class="card shadow-sm hover-shadow">
+                    <div class="card-header bg-light">
+                        <div class="d-flex align-items-center">
+                            <img src="{{ url_for('static', filename='profile_pics/' ~ post.author.avatar) }}" 
+                                 class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                            <span class="fw-bold">{{ post.author.username }}</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h2 class="card-title h4">{{ post.title }}</h2>
+                        <p class="card-text text-muted">{{ post.content }}</p>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">{{ post.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                            {% if post.author == current_user %}
+                                <div class="btn-group">
+                                    <a href="{{ url_for('post.post_update', id=post.id) }}" class="btn btn-sm btn-outline-primary">Изменить</a>
+                                    <a href="{{ url_for('post.post_delete', id=post.id) }}" class="btn btn-sm btn-outline-danger">Удалить</a>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Comments section with improved styling -->
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-outline-primary btn-sm" 
+                                    data-bs-toggle="collapse" 
+                                    data-bs-target="#commentSection-{{ post.id }}">
+                                <i class="fas fa-comments me-1"></i>Комментарии ({{ pagination.total }})
+                            </button>
+                        </div>
+                        
+                        <div class="collapse mt-3" id="commentSection-{{ post.id }}">
+                            <div class="border-top pt-3">
+                                <h5 class="text-muted mb-3">Комментарии</h5>
+                                
+                                {% for comment in pagination.items %}
+                                    <div class="card mb-2 bg-light">
+                                        <div class="card-body py-2">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <img src="{{ url_for('static', filename='profile_pics/' ~ comment.author.avatar) }}" 
+                                                     class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+                                                <small class="fw-bold">{{ comment.author.username }}</small>
+                                                <small class="text-muted ms-2">{{ comment.created_at.strftime('%d.%m.%Y') }}</small>
+                                            </div>
+                                            <p class="card-text mb-0">{{ comment.content }}</p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                                
+                                {% if pagination.has_next %}
+                                    <div class="text-center mt-3">
+                                        <a href="?page_post={{ posts_pagination.page }}&{{ 'page_' ~ post.id }}={{ pagination.next_num }}{% if search_query %}&q={{ search_query }}{% endif %}#commentSection-{{ post.id }}" 
+                                           class="btn btn-light btn-sm">
+                                            Показать еще ({{ pagination.total - pagination.items|length }})
+                                        </a>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if current_user.is_authenticated %}
+                                    <div class="card card-body mt-3 bg-light">
+                                        <form method="POST" action="{{ url_for('main.add_comment', id=post.id) }}">
+                                            {{ form.hidden_tag() }}
+                                            <div class="mb-3">
+                                                {{ form.content(class="form-control", placeholder="Написать комментарий...", rows="2") }}
+                                            </div>
+                                            {{ form.submit(class="btn btn-primary btn-sm") }}
+                                        </form>
+                                    </div>
+                                {% else %}
+                                    <div class="alert alert-light mt-3" role="alert">
+                                        <a href="{{ url_for('login.login_view') }}" class="alert-link">Войдите</a>, чтобы оставить комментарий
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        {% endfor %}
+        
+        <!-- Sidebar with improved styling -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-star me-2"></i>Популярные посты
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><i class="fas fa-chevron-right me-2 text-primary"></i>Пост 1</li>
+                    <li class="list-group-item"><i class="fas fa-chevron-right me-2 text-primary"></i>Пост 2</li>
+                    <li class="list-group-item"><i class="fas fa-chevron-right me-2 text-primary"></i>Пост 3</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination with better styling -->
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if posts_pagination.has_prev %}
+                <li class="page-item"></li>
+                    <a class="page-link" href="?page_post={{ posts_pagination.prev_num }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+            
+            <li class="page-item disabled">
+                <span class="page-link">{{ posts_pagination.page }} из {{ posts_pagination.pages }}</span>
+            </li>
+
+            {% if posts_pagination.has_next %}
+                <li class="page-item"></li>
+                    <a class="page-link" href="?page_post={{ posts_pagination.next_num }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endblock %}

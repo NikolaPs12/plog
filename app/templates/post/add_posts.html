@@ -1,0 +1,26 @@
+{% extends "base/base.html" %}
+
+{% block title %}Посты{% endblock %}
+{% block content %}
+    <form method="POST" enctype="multipart/form-data" class="form-control d-flex flex-column gap-3">
+        {{ form.hidden_tag() }}
+        {{ form.title(class="form-control", placeholder="Title") }}
+        {% if form.title.errors %}
+            <div class="invalid-feedback" style="display: block!important;">
+                {% for error in form.title.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>    
+        {% endif %}
+
+        {{ form.content(class="form-control", placeholder="Content") }}
+        {% if form.content.errors %}
+            <div class="invalid-feedback" style="display: block!important;">
+                {% for error in form.content.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>    
+        {% endif %}        
+        {{ form.submit(class="btn btn-success") }}
+    </form>
+{% endblock %}

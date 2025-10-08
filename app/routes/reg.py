@@ -5,6 +5,8 @@ from app.models.user import User
 from app.extensions import db
 from werkzeug.security import generate_password_hash
 
+from ..function import save_picture
+
 reg = Blueprint('reg', __name__)
 
 @reg.route('/registr', methods=['GET', 'POST'])
@@ -12,9 +14,11 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         hashed_password = generate_password_hash(form.password.data)
+        avatar_filename = save_picture(form.avatar.data)
         new_user = User(username=form.username.data,
                         email=form.email.data,
-                        password=hashed_password)
+                        password=hashed_password,
+                        avatar=avatar_filename)
         try:
             db.session.add(new_user)
             db.session.commit()
@@ -23,4 +27,4 @@ def register():
         except Exception as e:
             db.session.rollback()
             flash('Ошибка во время регистрации. Пожалуйста повторите попытку.', 'danger')
-    return render_template('reg.html', form=form)        
+    return render_template('log/reg.html', form=form)        

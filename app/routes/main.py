@@ -1,38 +1,94 @@
 from flask import Blueprint, render_template, flash, request, redirect, url_for
 from ..extensions import db
 from flask_login import login_required, current_user
-from ..forms import PostForm
 from ..extensions import db
 from ..models.posts import Post
 from ..models.coments import Coment
-from ..forms import CommentForm
+from ..models.user import User
+from ..forms import CommentForm, SearchForm, FilterForm
+
 main = Blueprint('main', __name__)
 
-@main.route('/', methods=['GET', 'POST'])
+
+
+@main.route('/')
+def home():
+    # Можно перенаправлять на /posts, если хочешь, чтобы главная была страница с постами
+    return redirect(url_for('main.index'))
+
+@main.route('/posts', methods=['GET', 'POST'])
 def index():
-    posts = Post.query.order_by(Post.id.desc()).all()
+    filter_form = FilterForm()
+    filter_form.author.choices = [(0, '👥 Все авторы')] + [
+        (user.id, user.username) for user in User.query.all()
+    ]
+    
+    # ⬇️ ИСПРАВЛЕНО: получаем параметры фильтрации
+    author_id = request.args.get('author', type=int)  # ⬅️ было 'author_id'
+    sort_by = request.args.get('sort_by', 'newest')
+    page_post = request.args.get('page_post', 1, type=int)
+    search_query = request.args.get('q', '')
+    
+    # Формы
     form = CommentForm()
+    search_form = SearchForm()
+    
+    # БАЗОВЫЙ ЗАПРОС
+    posts_query = Post.query
+    
+    # ⬇️ ИСПРАВЛЕНО: применяем фильтрацию по автору
+    if author_id and author_id != 0:  # ⬅️ проверяем что не "Все авторы"
+        posts_query = posts_query.filter_by(author_id=author_id)
+
+    # ⬇️ ИСПРАВЛЕНО: применяем сортировку
+    if sort_by == 'newest':
+        posts_query = posts_query.order_by(Post.id.desc())
+    elif sort_by == 'oldest':
+        posts_query = posts_query.order_by(Post.id.asc())
+    elif sort_by == 'popular':
+        posts_query = posts_query.outerjoin(Coment).group_by(Post.id).order_by(db.func.count(Coment.id).desc())
+    
+    # ⬇️ ИСПРАВЛЕНО: применяем поиск (должно быть после фильтрации)
+    if search_query:
+        posts_query = posts_query.filter(
+            Post.title.ilike(f'%{search_query}%') | 
+            Post.content.ilike(f'%{search_query}%')
+        )
+    
+    # ⬇️ ИСПРАВЛЕНО: пагинация применяется к отфильтрованному запросу
+    posts_pagination = posts_query.paginate(
+        page=page_post, 
+        per_page=3,
+        error_out=False
+    )
     
     # Для каждого поста получаем комментарии с пагинацией
     posts_with_comments = []
-    for post in posts:
-        # Получаем номер страницы для каждого поста из GET параметра
-        page = request.args.get(f'page_{post.id}', 1, type=int)
-        comments_query = Coment.query.filter_by(post_id=post.id).order_by(Coment.id.desc())
-        comments_pagination = comments_query.paginate(
-            page=page, 
-            per_page=5,  # ⬅️ по 5 комментариев на страницу
-            error_out=False
-        )
+    for post in posts_pagination.items: 
+        comment_page = request.args.get(f'page_{post.id}', 1, type=int)
+        comments_pagination = Coment.query.filter_by(post_id=post.id)\
+                                        .order_by(Coment.id.desc())\
+                                        .paginate(
+                                            page=comment_page,
+                                            per_page=5,
+                                            error_out=False
+                                        )
         
         posts_with_comments.append({
             'post': post,
             'comments_pagination': comments_pagination
         })
     
-    return render_template('main.html', 
+    return render_template('base/main.html',
                          posts_with_comments=posts_with_comments, 
-                         form=form)
+                         posts_pagination=posts_pagination, 
+                         form=form,
+                         search_form=search_form,
+                         search_query=search_query,
+                         current_author=author_id,  # ⬅️ ИСПРАВЛЕНО: было current_autor
+                         current_sort=sort_by,
+                         filter_form=filter_form)
+
 
 @main.route("/comment/<int:id>", methods=['POST'])
 @login_required
@@ -55,3 +111,5 @@ def add_comment(id):
             flash('Ошибка при добавлении комментария.', 'danger')
     
     return redirect(url_for('main.index'))
+
+

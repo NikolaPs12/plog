@@ -28,7 +28,7 @@ def login_view():
             return redirect(next_page) if next_page else redirect(url_for('main.index'))
         else:
             flash('Неверный email или пароль.', 'danger')  
-    return render_template('login.html', form=form)
+    return render_template('log/login.html', form=form)
 
 @login.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
@@ -50,7 +50,7 @@ def forgot_password():
             flash('Пользователь с таким email не найден.', 'warning')
             return redirect(url_for('login.forgot_password'))
     
-    return render_template('forgot_password.html', form=form)
+    return render_template('log/forgot_password.html', form=form)
 
 @login.route('/reset/<token>', methods=['GET', 'POST'])
 def reset_password(token):
@@ -69,7 +69,7 @@ def reset_password(token):
         db.session.commit()
         flash('Ваш пароль был успешно сброшен. Теперь вы можете войти с новым паролем.', 'success')
         return redirect(url_for('login.login_view'))
-    return render_template('reset_password.html', form=form)
+    return render_template('log/reset_password.html', form=form)
 
 @login.route('/logout')
 def logout():
