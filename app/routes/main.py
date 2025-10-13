@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, flash, request, redirect, url_for
-from ..extensions import db
+from ..extensions import db, cache
 from flask_login import login_required, current_user
 from ..extensions import db
 from ..models.posts import Post
@@ -9,14 +9,13 @@ from ..forms import CommentForm, SearchForm, FilterForm
 
 main = Blueprint('main', __name__)
 
-
-
 @main.route('/')
 def home():
     # Можно перенаправлять на /posts, если хочешь, чтобы главная была страница с постами
     return redirect(url_for('main.index'))
 
 @main.route('/posts', methods=['GET', 'POST'])
+@cache.cached(timeout=60, query_string=True)  # Кэшируем на 60 секунд с учётом параметров запроса
 def index():
     filter_form = FilterForm()
     filter_form.author.choices = [(0, '👥 Все авторы')] + [
@@ -85,7 +84,7 @@ def index():
                          form=form,
                          search_form=search_form,
                          search_query=search_query,
-                         current_author=author_id,  # ⬅️ ИСПРАВЛЕНО: было current_autor
+                         current_author=author_id, 
                          current_sort=sort_by,
                          filter_form=filter_form)
 
