@@ -33,7 +33,10 @@ def create_app(config_class=Config):
     def load_user(user_id):
         return User.query.get(int(user_id))
     
-    
+    avatar_folder = os.path.join(app.root_path, app.config['UPLOAD_PATH'])
+    if not os.path.exists(avatar_folder):
+        os.makedirs(avatar_folder)
+        
     with app.app_context():
         db.create_all()
     return app

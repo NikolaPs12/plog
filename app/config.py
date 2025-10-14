@@ -17,7 +17,7 @@ class Config(object):
 
 
     # Используем переменную окружения для подключения к БД с явным указанием кодировки
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or "postgresql://plog:password@host:5432/dbplog"
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or "postgresql://plog:password@localhost:5432/dbplog"
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'nikola'
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     SQLALCHEMY_ECHO = True
