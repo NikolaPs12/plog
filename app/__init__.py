@@ -36,8 +36,7 @@ def create_app(config_class=Config):
     avatar_folder = os.path.join(app.root_path, app.config['UPLOAD_PATH'])
     if not os.path.exists(avatar_folder):
         os.makedirs(avatar_folder)
-
+        
     with app.app_context():
-        db.drop_all()
         db.create_all()
     return app
