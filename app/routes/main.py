@@ -15,7 +15,6 @@ def home():
     return redirect(url_for('main.index'))
 
 @main.route('/posts', methods=['GET', 'POST'])
-@cache.cached(timeout=60, query_string=True)  # Кэшируем на 60 секунд с учётом параметров запроса
 def index():
     filter_form = FilterForm()
     filter_form.author.choices = [(0, '👥 Все авторы')] + [

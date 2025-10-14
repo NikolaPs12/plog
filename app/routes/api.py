@@ -15,16 +15,22 @@ def get_post(id):
         'author': post.author.username
     })
 
-@api.route('/posts', methods=['GET'])
-def list_posts():
-    posts = Post.query.all()
-    posts_data = [{
-        'id': post.id,
-        'title': post.title,
-        'content': post.content,
-        'author': post.author.username
-    } for post in posts]
-    return jsonify(posts_data)
+@api.route('/post', methods=['POST'])
+@login_required
+def create_post():
+    data = request.get_json()
+    new_post = Post(
+        title=data['title'],    
+        content=data['content'],
+        author_id=current_user.id  # ← ИСПРАВЛЕНО
+    )
+    try:
+        db.session.add(new_post)
+        db.session.commit()
+        return jsonify({'message': 'Post created', 'id': new_post.id}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'Error: {str(e)}'}), 500  # ← Возвращаем ошибку
 
 @api.route('/posts', methods=['POST'])
 @login_required

@@ -46,25 +46,20 @@ def post_update(id):
     
     return render_template('post/add_posts.html', form=form, post=post)
 
-@post.route('/post_delete/<int:id>', methods=['GET','POST'])
+@post.route('/post_delete/<int:id>', methods=['POST'])  # ← Только POST
 @login_required
 def post_delete(id):
     post = Post.query.get_or_404(id)
     if post.author != current_user:
         flash('У вас нет прав на удаление этого поста.', 'danger')
         return redirect(url_for('main.index'))
-    form = PostForm()
+    
     try:
-        post.title = form.title.data
-        post.content = form.content.data
         db.session.delete(post)
         db.session.commit()
         flash('Пост успешно удален!', 'success')
     except Exception as e:
         db.session.rollback()
-        flash('Ошибка при удалении поста. Пожалуйста, повторите попытку.', 'danger')
+        flash('Ошибка при удалении поста.', 'danger')
     
-    form.title.data = post.title
-    form.content.data = post.content
-
     return redirect(url_for('main.index'))
